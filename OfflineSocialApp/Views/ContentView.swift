@@ -8,112 +8,132 @@ struct ContentView: View {
     @State private var showingNearbyUsers = false
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 30) {
+        ZStack {
+            Color.white
+                .ignoresSafeArea()
+
+            NavigationView {
+                ZStack {
+                    Color.white
+                        .ignoresSafeArea()
+
+                VStack(spacing: 18) {
                 Spacer()
-                    .frame(height: 0)
-                
+                    .frame(minHeight: 10)
+
                 // Profile Section
-                VStack(spacing: 16) {
+                VStack(spacing: 10) {
                     if let photo = profileService.profile.photo {
                         photo
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(width: 120, height: 120)
+                            .frame(width: 90, height: 90)
                             .clipShape(Circle())
+                            .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 3)
                     } else {
                         Image(systemName: "person.circle.fill")
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .frame(width: 120, height: 120)
-                            .foregroundColor(.gray)
+                            .frame(width: 90, height: 90)
+                            .foregroundColor(.gray.opacity(0.5))
                     }
-                    
+
                     Text(profileService.profile.name.isEmpty ? "No Name Set" : profileService.profile.name)
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                    
+                        .font(.title3)
+                        .fontWeight(.bold)
+
                     if !profileService.profile.interests.isEmpty {
                         Text(profileService.profile.interests.joined(separator: ", "))
-                            .font(.subheadline)
+                            .font(.caption)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
+                            .lineLimit(2)
                     }
                 }
-                .padding()
-                
+                .padding(.horizontal)
+
                 // Visibility Toggle
-                VStack(spacing: 16) {
+                VStack(spacing: 6) {
                     Button(action: toggleVisibility) {
-                        HStack {
+                        HStack(spacing: 8) {
                             Image(systemName: profileService.profile.isVisible ? "eye.fill" : "eye.slash.fill")
                             Text(profileService.profile.isVisible ? "Visible to Others" : "Not Visible")
                         }
-                        .font(.headline)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding()
+                        .padding(.vertical, 13)
+                        .padding(.horizontal)
                         .background(profileService.profile.isVisible ? Color.green : Color.gray)
-                        .cornerRadius(12)
+                        .cornerRadius(10)
+                        .shadow(color: (profileService.profile.isVisible ? Color.green : Color.gray).opacity(0.3), radius: 3, x: 0, y: 2)
                     }
-                    
+
                     Text(profileService.profile.isVisible ? "Others can discover you nearby" : "You are hidden from others")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.secondary)
                 }
-                .padding(.horizontal)
-                
+                .padding(.horizontal, 20)
+
                 // Action Buttons
                 VStack(spacing: 12) {
                     Button(action: {
                         showingNearbyUsers = true
                     }) {
-                        HStack {
+                        HStack(spacing: 8) {
                             Image(systemName: "person.2.fill")
                             Text("Find Nearby Users")
                         }
-                        .font(.headline)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding()
+                        .padding(.vertical, 14)
+                        .padding(.horizontal)
                         .background(Color.blue)
-                        .cornerRadius(12)
+                        .cornerRadius(10)
+                        .shadow(color: Color.blue.opacity(0.3), radius: 3, x: 0, y: 2)
                     }
-                    
+
                     Button(action: {
                         showingProfile = true
                     }) {
-                        HStack {
+                        HStack(spacing: 8) {
                             Image(systemName: "person.circle")
                             Text("Edit Profile")
                         }
-                        .font(.headline)
-                        .foregroundColor(.blue)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(12)
+                        .padding(.vertical, 14)
+                        .padding(.horizontal)
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                        .shadow(color: Color.blue.opacity(0.3), radius: 3, x: 0, y: 2)
                     }
                 }
-                .padding(.horizontal)
-                
+                .padding(.horizontal, 20)
+
                 // Bluetooth Status
                 if bleManager.bluetoothState != .poweredOn {
-                    HStack {
+                    HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.orange)
                         Text(bluetoothStatusText)
-                            .font(.caption)
+                            .font(.caption2)
                             .foregroundColor(.secondary)
                     }
-                    .padding()
+                    .padding(.horizontal, 20)
                 }
-                
+
                 Spacer()
+                    .frame(minHeight: 20)
+                }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .navigationTitle("Offline Social")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationTitle("TuTu")
+            .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showingProfile) {
                 ProfileView()
             }
@@ -125,7 +145,9 @@ struct ContentView: View {
                     bleManager.startScanning()
                 }
             }
+            }
         }
+        .accentColor(.blue)
     }
     
     private var bluetoothStatusText: String {
@@ -144,7 +166,7 @@ struct ContentView: View {
     private func toggleVisibility() {
         let newVisibility = !profileService.profile.isVisible
         profileService.updateProfile(isVisible: newVisibility)
-        
+
         if newVisibility {
             bleManager.startAdvertising(profile: profileService.profile)
         } else {

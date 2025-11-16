@@ -7,10 +7,16 @@ struct ProfileView: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var name: String = ""
     @State private var interests: String = ""
+    @FocusState private var focusedField: Field?
     @Environment(\.dismiss) var dismiss
+
+    enum Field {
+        case name
+        case interests
+    }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section(header: Text("Profile Photo")) {
                     HStack {
@@ -41,15 +47,20 @@ struct ProfileView: View {
                     TextField("Enter your name", text: $name)
                         .textInputAutocapitalization(.words)
                         .autocorrectionDisabled(false)
+                        .focused($focusedField, equals: .name)
+                        .submitLabel(.next)
                 }
                 
                 Section(header: Text("Interests")) {
                     TextField("Enter interests (comma-separated)", text: $interests, axis: .vertical)
                         .lineLimit(3...6)
+                        .focused($focusedField, equals: .interests)
+                        .submitLabel(.done)
                 }
                 
                 Section {
                     Button("Save Profile") {
+                        focusedField = nil // Dismiss keyboard
                         saveProfile()
                     }
                     .frame(maxWidth: .infinity)
@@ -57,9 +68,26 @@ struct ProfileView: View {
             }
             .navigationTitle("Edit Profile")
             .navigationBarTitleDisplayMode(.inline)
+            .onSubmit {
+                switch focusedField {
+                case .name:
+                    focusedField = .interests
+                case .interests:
+                    focusedField = nil
+                case .none:
+                    break
+                }
+            }
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
+                        focusedField = nil // Dismiss keyboard
                         saveProfile()
                         dismiss()
                     }
